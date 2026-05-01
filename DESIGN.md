@@ -24,7 +24,7 @@ changes through hurts velocity.
 
 In this proposal, we split the problem space into two distinct domains with corresponding workflows:
 
-1. source change → docs. Event based. A developer has merged a diff and the docs need to reflect a new state implemented by the docs agent.
+1. source change → docs. Event based. A developer has merged a diff and the docs need to reflect it.
 2. docs -> source as SOT. Proactive sentinel. As a cron-style async job, the docs-auditor agent checks back-and-forth between the state of the docs and the source code. Inconsistencies are raised as issues and then patched by invoking the docs agent from (1)
 
 Other approaches like batching commit diffs on a schedule could be taken as an alternative. One docs agent run to one commit to main is proposed
@@ -55,8 +55,7 @@ By setting up a GH action workflow, we can automatically run the docs agent on P
 
 When I started this work I naively assumed that a documentation automation was going to be really simple in its implementation
 and the open questions were going to center around distribution and runtime choices. This did not turn out to be the case. Balancing
-correctness and latency has turned out to be really tricky, and the state of the work at the time of reading namely did not solve
-for latency.
+correctness and latency has turned out to be really tricky. At the time of writing, the implementation does not solve for latency.
 
 I first reached for a graph because it fit my mental model of the necessary flow.
 
@@ -69,7 +68,7 @@ As I experimented with alternatives, I found that the same role-based model had 
 - roles as a system prompt (SOP?)
 - unified single agent with SOP
 
-Each approach was back-tested agent designs against a representative selection of 6 PR diffs and their corresponding docs changes.
+Each approach was back-tested against a representative selection of 6 PR diffs and their corresponding docs changes.
 
 ## PRs tested
 
@@ -87,7 +86,7 @@ Trends emerged:
 1. Condensing the entire pipeline into a single skill or agent prompt was less effective than a graph with the same directive.
 2. Domain specific language in prompts/SOPs recovered a single prompt to perform similarly to a graph. This aligns with what we've seen in 
 many domains.
-3. Since Strands graph nodes pass full context between edges, max tokens exceeded is a risk and latency is very high
+3. Since Strands graph nodes pass full context between edges, context overflow is a risk and latency is very high
 4. Breaking out each node into a distinct skill was similarly effective but much slower than a unified system prompt.
 5. Breaking out the explore phase into a separate process--either as an agent-as-tool or a skill--was less correct than describing the phase in the system prompt.
 6. The most dramatic finding was the improvements seen by pulling out the audit phase into an agent-as-tool with a fresh context. An agent with a context
@@ -158,7 +157,7 @@ too many moving parts, it might come down to the familiar prompt and tool qualit
 
 Returning to the topic of exploration and file exploration, supporting batch grep/glob inputs/outputs in those
 tools and adding explicit language in the system prompt encouraging the model to ask for parallel batched calls
-to those tools saw a ~20% speedup in total runtime. 
+to those tools saw a ~20% speedup in total runtime in head-to-head comparison. 
 
 We can note that efficiency gains such as these are really tricky from the
 SDK point of view since outcomes are very sensitive to prompt and tool implementations.
@@ -249,7 +248,7 @@ Strands Docs Agent
 [] neutral / needs review
 ```
 
-Devs would edit the comment to collect data. Alternatively this approach could use an X/10 feedback system too.
+Devs would edit the comment to leave feedback. Alternatively this approach could use an X/10 feedback system too.
 
 ## Docs Audit Agent
 
@@ -323,11 +322,11 @@ Use this workflow as a testbed for batch grep/glob tools, workflow feedback coll
 ## Conclusion
 
 With the understanding that we're expecting to iterate, building out the proposed docs agent and audit agent would have rough edges, but should
-deliver immediate value. Depending on priorities and to avoid time wiring short-lasting behaviors, it could be reasonable to block the implementation 
-on the monorepo delivery.
+deliver immediate value.
 
-Otherwise, topics like vending more extensive file exploration tooling, concurrent agent coordination constructs, and workflow feedback 
-can be followed up on.
+If we align on moving forward with implementation, the main open question is whether to start with the reusable `/strands docs` runner now, or wait for the monorepo to avoid short-lived wiring. 
+
+Either way, the experiment surfaced useful Strands follow-up areas: file exploration tools, fresh-context audit patterns, workflow feedback collection, and multi-agent coordination.
 
 We also might look to convert some of the learnings around "how do I model my multi-step workflow in Strands" into a page in our docs.
 

@@ -24,8 +24,8 @@ changes through hurts velocity.
 
 In this proposal, we split the problem space into two distinct domains with corresponding workflows:
 
-1. source change -> docs. Event based. A developer has merged a diff and the docs need to reflect a new state implemented by the docs agent.
-2. docs -> source as SOT. Proactive sentinel. As a CRON-style async job, the docs-auditor agent checks back-and-forth between the state of the docs and the source code. Inconsistencies are raised as issues and then patched issuing the docs agent from (1)
+1. source change → docs. Event based. A developer has merged a diff and the docs need to reflect a new state implemented by the docs agent.
+2. docs -> source as SOT. Proactive sentinel. As a cron-style async job, the docs-auditor agent checks back-and-forth between the state of the docs and the source code. Inconsistencies are raised as issues and then patched by invoking the docs agent from (1)
 
 Other approaches like batching commit diffs on a schedule could be taken as an alternative. One docs agent run to one commit to main is proposed
 to limit the problem space for both the Agent and the developer that needs to approve the Agent's work.
@@ -66,7 +66,7 @@ As I experimented with alternatives, I found that the same role-based model had 
 
 - role as a skill
 - role as a subagent
-- role/s as a system prompt (SOP?)
+- roles as a system prompt (SOP?)
 - unified single agent with SOP
 
 Each approach was back-tested agent designs against a representative selection of 6 PR diffs and their corresponding docs changes.
@@ -143,7 +143,7 @@ We re-use the S3SessionManager approach used by the existing Strands /impl comma
 
 ### Limitations: Latency and Cost
 
-While experimenting, I optimized for correctness which was unfortunately paired with high latency between 10-20 for 
+While experimenting, I optimized for correctness which was unfortunately paired with high latency between 10–20 minutes for 
 medium to large diffs. Similarly, token inputs grew very quickly towards 1-5M input tokens per run.
 
 In terms of speccing an acceptable solution for our own dev tools, we should decide on an acceptable level of
@@ -172,7 +172,7 @@ with config settings like max tokens, thinking budgets, and interleaved thinking
 A dedicated Strands code harness could serve as a valuable testing ground for improving latency while maintaining
 correctness over the heavily model-driven tools loop explored here.
 
-To get to CC/Codex level latency on this kind of task likely requires making significant progress on lifting the "brain" of
+To get closer to CC/Codex-level latency on this kind of task likely requires making significant progress on lifting the "brain" of
 the system up a level where decisions can be fast. Instead of asking the primary agent to repeatedly decide when to search, what to read, how much 
 context to carry forward, when to validate, and when to retry, a harness could make those decisions explicitly and cheaply.
 
@@ -259,14 +259,14 @@ over source code instead of directly in the browser against our live website thr
 
 ### Designs Considered
 
-When first considering this problem space, I first reached for a fully Agent centric pattern where a top level orchestrator
+When first considering this problem space, I first reached for a fully agent-centric pattern where a top level orchestrator
 Agent called tools to identify the relevant domain of doc files to verify and then spawned N independent Agents to tackle it.
 
 Approaches like these could be attempted by using the `use_agent` tool in the community tools repo or alternatively by using the
 experimental agent-as-config approach. However, both options are not ideal for a clean orchestrator–worker implementation: 
 they only support sequential, blocking invocations. 
 
-In short, these tools allow the main agent to spawn individual Agents, but don't feel like a purpose built orchestrator-worker
+In short, these tools allow the main agent to spawn individual Agents, but don't feel like a purpose-built orchestrator-worker
 protocol/abstraction. 
 
 Upcoming async/background tools would be a necessary piece to provide such constructs. With background agents-as-tools, a construct
@@ -298,7 +298,7 @@ We'd lose two things by taking that choice:
 
 1) The opportunity to dogfood concurrent agent coordination tooling
 2) Fresh context windows for more pointed validation
-3) Latency (Not really important since this is CRON style)
+3) Latency (Not really important since this is cron-style)
 
 ### Balancing Signal/Noise
 
@@ -311,8 +311,14 @@ proactive Agent we risk noise.
 
 ### Audit -> Implementation Flow
 
-To avoid overloading roles, the end result of the documentation auditor can be to check existing open issues for duplicates, cutting issue/s 
-for what was flagged, and then commenting `/strands docs` on those issues. We re-use the purpose built agent for the implementation piece.
+To avoid overloading roles, the end result of the documentation auditor can be to check existing open issues for duplicates, cutting issues 
+for what was flagged, and then commenting `/strands docs` on those issues. We re-use the purpose-built agent for the implementation piece.
+
+## Recommendation
+
+Start with a reusable `/strands docs` GitHub Actions runner using the proposed main-agent + fresh audit-subagent pipeline. Treat the current latency as acceptable for initial dogfooding, but track it explicitly. Defer fully automatic PR-merge kickoff until the monorepo removes cross-repo permission issues.
+
+Use this workflow as a testbed for batch grep/glob tools, workflow feedback collection, and future multi-agent coordination primitives.
 
 ## Conclusion
 
@@ -325,9 +331,9 @@ can be followed up on.
 
 We also might look to convert some of the learnings around "how do I model my multi-step workflow in Strands" into a page in our docs.
 
-## Appendix: Additional CRON workflows?
+## Appendix: Additional cron workflows?
 
-If we align to introduce our docs audit agent which would involve setting up CRON style GH Action, we can briefly consider related 
+If we align to introduce our docs audit agent which would involve setting up a cron-style GH Action, we can briefly consider related 
 opportunities for async/long-running workflows.
 
 ### Browser Based Async Agents

@@ -1,0 +1,2 @@
+name: audit
+description: Factual and structural correctness audit on pages the main agent just wrote. Verifies three classes of claim against on-disk truth — symbol/coverage, same-page internal consistency, and snippet-vs-heading demonstrability. Read-only; emits findings for the main agent to apply in a single in-loop fix pass. Invoked once per run after doc-writer and npm validation finish; NOT re-invoked after the fix pass.

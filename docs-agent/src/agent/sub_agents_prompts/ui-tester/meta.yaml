@@ -1,0 +1,2 @@
+name: ui-tester
+description: Invoke as a fresh-context sub-agent to visually verify modified pages render correctly in the dev server. Starts a Playwright browser, visits each modified page, emits findings for any visual issue. Only worth invoking for runs that changed rendering-sensitive structure (tab composition, Mermaid diagrams, callouts, images, tables, nav/sidebar entries, custom components). Skip for prose-only and snippet-only edits.
